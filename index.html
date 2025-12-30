@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deviation Form 2</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d6efd">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<style>
+/* ===== YOUR ORIGINAL CSS (UNCHANGED) ===== */
+:root {
+  --primary: #0d6efd;
+  --success: #198754;
+  --bg: #f8f9fa;
+  --border: #dee2e6;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+}
+
+.container {
+  max-width: 480px;
+  margin: auto;
+  padding: 12px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 14px;
+  font-weight: 600;
+  background: var(--primary);
+  color: white;
+  text-align: center;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+textarea { resize: none; }
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-success { background: var(--success); color: white; }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">Deviation Form v3</div>
+
+    <div class="card-body">
+      <div class="form-group">
+        <label>Name</label>
+        <input id="name">
+      </div>
+
+      <div class="form-group">
+        <label>Type</label>
+        <select id="type">
+          <option value="">-- select --</option>
+          <option>Survey</option>
+          <option>Production</option>
+          <option>Inspection</option>
+          <option>Maintenance</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Comment</label>
+        <input id="comment">
+      </div>
+
+      <div class="form-group">
+        <label>GPS</label>
+        <input id="gps" readonly>
+      </div>
+
+      <div class="actions">
+        <button onclick="askGps()">Allow Location</button>
+        <button class="btn btn-primary" onclick="getLocation()">📍 Get Location</button>
+        <button class="btn btn-primary" onclick="generateResult()">Generate</button>
+      </div>
+
+      <div class="form-group">
+        <label>Result</label>
+        <textarea id="result" rows="5" readonly></textarea>
+      </div>
+
+      <button class="btn btn-success" onclick="copyResult()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SERVICE WORKER REGISTER =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+// ===== YOUR ORIGINAL JS =====
+function getLocation() {
+  if (!navigator.geolocation) {
+    alert("GPS not supported on this device");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      const lat = position.coords.latitude.toFixed(6);
+      const lon = position.coords.longitude.toFixed(6);
+      document.getElementById("gps").value = lat + ", " + lon;
+    },
+    function (error) {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert("Location permission denied");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location unavailable");
+          break;
+        case error.TIMEOUT:
+          alert("Location request timed out");
+          break;
+        default:
+          alert("Unknown location error");
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+}
+function askGps() {
+  navigator.geolocation.getCurrentPosition(
+    () => alert("Permission granted"),
+    (e) => alert("Permission error: " + e.code)
+  );
+}
+function generateResult() {
+  const now = new Date();
+  result.value =
+`#$Name      : ${name.value}
+#$Comment   : ${comment.value}
+#$GPS       : ${gps.value}
+#$Timestamp : ${now.toISOString().replace('T',' ').slice(0,19)}`;
+}
+function copyResult() {
+  const textarea = document.getElementById("result");
+
+  textarea.removeAttribute("readonly");
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length); // iOS
+  document.execCommand("copy");
+  textarea.setAttribute("readonly", true);
+
+  alert("Copied");
+}
+
+</script>
+
+</body>
+</html>
